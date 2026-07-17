@@ -1,9 +1,15 @@
-# Use official PHP image with necessary extensions
+# Use official PHP image
 FROM php:8.2-cli
 
-# Install dependencies
-RUN apt-get update && apt-get install -y unzip zip curl git libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+# Install system packages
+RUN apt-get update && apt-get install -y \
+    unzip \
+    zip \
+    git \
+    curl \
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql zip \
+    && apt-get clean
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -11,14 +17,20 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy project files into container
+# Copy composer files first
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copy the rest of the application
 COPY . .
 
-# Set file permissions
-RUN chmod -R 755 /var/www
+# Set permissions
+RUN chmod -R 775 storage bootstrap/cache
 
-# Expose Laravel default dev server port
+# Expose port
 EXPOSE 80
 
-# Start Laravel dev server
+# Start Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
