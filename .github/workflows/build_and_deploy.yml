@@ -13,7 +13,7 @@ jobs:
                 username: ubuntu
                 key: ${{ secrets.EC2_SSH_KEY }}
                 script: |
-                    cd /home/ubuntu/Intro-to-docker
+                    cd /home/ubuntu/laravel-aws
                     git fetch origin
                     git reset --hard origin/main
                     docker compose up -d --build
